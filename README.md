@@ -1,2 +1,2 @@
 # darwin
-Blackbox Optimization with Evolutionary Strategies.
+darwin is a library for distributed blackbox optimization with [Evolutionary Strategies](https://arxiv.org/abs/1703.03864).
