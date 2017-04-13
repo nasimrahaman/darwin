@@ -77,6 +77,7 @@ class WorkerBase(object):
                 # Pull only when the pulled from server event is cleared
                 if not self._successfully_pulled_from_server.is_set():
                     # This blocks until the pull was successful
+                    # TODO Set stop processing event
                     self.pull()
                 else:
                     time.sleep(self._listener_latency)
@@ -113,8 +114,11 @@ class WorkerBase(object):
 
 
 class Worker(WorkerBase):
-    def __init__(self, **base_kwargs):
+    def __init__(self, model, feeder, **base_kwargs):
         super(Worker, self).__init__(**base_kwargs)
+        # Public
+        self.feeder = feeder
+        self.model = model
         # TODO
 
     def from_config(self, config_file):
