@@ -2,6 +2,21 @@ import matplotlib
 from matplotlib import pyplot as plt
 import scipy.sparse as sparse
 
+# delete me
+import time
+def timeit(method):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+
+        print '%r %2.2f sec' % \
+              (method.__name__, te-ts)
+        return result
+
+    return timed
+
+
 # from Antipasti.io.preprocessing import as_function_over_axes
 # import tensorflow as tf
 from sklearn.metrics import adjusted_rand_score
@@ -18,13 +33,24 @@ fixed_rand[0, :] = 0
 rand_cm = matplotlib.colors.ListedColormap(fixed_rand)
 
 
-def edges_to_rand_i(edge_pred, gt_label):
+@timeit
+def edges_to_arand_score(edge_pred, gt_label):
+    """
+    computes the rand index given edge weights (edge_pred) and the ground truth
+    :param edge_pred: (NHWC=3) value for all ndirected edges towards a pixel in the order of
+                      (seed (C==0), vertical (C==1), horizontal (C==2)
+    :param gt_label: (NHWC=1) uint labeling for segmentation. Zeros are ignored!!
+    :return: Mean adapated Rand score between 0 (edge_pred leads to nasty segmentation) and 1 (perfect segmentation)
+    """
+
     ws = kw.Watershredder(edge_pred.shape[-3:-1])
-    ws.execute_kruskal_updates(edge_pred)
-    a = ws.get_display_label_image()
-    rand = adapted_rand(a, gt_label)
-    print 'rand', rand
-    return a, ws
+    arand_score = 0.
+    for edge_pred_i, gt_label_i in zip(edge_pred, gt_label):
+        ws.execute_kruskal_updates(edge_pred_i)
+        segmenation_pred_i = ws.get_display_label_image()
+        arand_score += adapted_rand(segmenation_pred_i, gt_label_i)
+    arand_score /= float(edge_pred.shape[0])
+    return arand_score, segmenation_pred_i
 
 
 # Evaluation code courtesy of Juan Nunez-Iglesias, taken from
@@ -133,32 +159,36 @@ def adapted_rand(seg, gt, all_stats=False):
 
 
 
+
+
 if __name__ == '__main__':
-    el = 20
-    a = np.ones((el, el, 3), dtype=np.float32)
+    el = 2000
+    a = np.ones((1, el, el, 3), dtype=np.float32)
 
-    a[:, :, 2] = 0
-    a[el/2, :, 2] = 10.
-    a[:, :, 1] = np.random.random((el, el)) / 1000.
+    a[0, :, :, 2] = 0
+    a[0, :, :, 2] = np.random.random((el, el))*2
+    a[0, :, :, 1] = np.random.random((el, el))*2
 
-    a[el/10, el/10, 0] = 0
-    a[-el/10, -el/10, 0] = 0
-    target = np.zeros_like(a[..., 2])
-    target[:el/2, :] = 1
+    a[0, el/10, el/10, 0] = 0
+    a[0, -el/10, -el/10, 0] = 0
+    target = np.random.randint(low=0, high=80000, size=a.shape)[..., 0]
+    # target[0, :el/2, :] = 1
     target += 1
-
+    print 'spahesp',    a.shape, target.shape
     # a[0, :5, :] = 1
     # for a_i in a
     for i in [1, 2]:
-        a[:, :, i] = gaussian_filter(a[:, :, i], 5)
+        a[0, :, :, i] = gaussian_filter(a[0, :, :, i], 5)
 
     f, ax = plt.subplots(3,3)
-    ax[0, 0].imshow(a[..., 0], interpolation='None', cmap='gray')
-    ax[0, 1].imshow(a[..., 1], interpolation='None', cmap='gray')
-    ax[0, 2].imshow(a[..., 2], interpolation='None', cmap='gray')
-    b, ws= edges_to_rand_i(a, target)
+    ax[0, 0].imshow(a[0, ..., 0], interpolation='None', cmap='gray')
+    ax[0, 1].imshow(a[0, ..., 1], interpolation='None', cmap='gray')
+    ax[0, 2].imshow(a[0, ..., 2], interpolation='None', cmap='gray')
+
+    ars, b = edges_to_arand_score(a, target)
+    print 'ars', ars, b.shape
     ax[1,0].imshow(b, interpolation='None', cmap=rand_cm)
-    ax[1,1].imshow(target, interpolation='None', cmap=rand_cm)
+    ax[1,1].imshow(target[0], interpolation='None', cmap=rand_cm)
     plt.show()
 
     exit()
