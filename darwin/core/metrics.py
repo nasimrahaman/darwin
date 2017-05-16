@@ -1,39 +1,8 @@
-import matplotlib
-from matplotlib import pyplot as plt
 import scipy.sparse as sparse
-
-# delete me
-import time
-def timeit(method):
-    def timed(*args, **kw):
-        ts = time.time()
-        result = method(*args, **kw)
-        te = time.time()
-
-        print '%r %2.2f sec' % \
-              (method.__name__, te-ts)
-        return result
-
-    return timed
-
-
-# from Antipasti.io.preprocessing import as_function_over_axes
-# import tensorflow as tf
-from sklearn.metrics import adjusted_rand_score
-from scipy.ndimage import watershed_ift, gaussian_filter
-from scipy.ndimage.measurements import  label
 import kruskals_ws as kw
 import numpy as np
 
 
-matplotlib.rcParams.update({'font.size': 5})
-np.random.seed(1236)
-fixed_rand = np.random.rand(10000, 3)
-fixed_rand[0, :] = 0
-rand_cm = matplotlib.colors.ListedColormap(fixed_rand)
-
-
-@timeit
 def edges_to_arand_score(edge_pred, gt_label):
     """
     computes the rand index given edge weights (edge_pred) and the ground truth
@@ -162,6 +131,17 @@ def adapted_rand(seg, gt, all_stats=False):
 
 
 if __name__ == '__main__':
+    from scipy.ndimage import watershed_ift, gaussian_filter
+    from scipy.ndimage.measurements import label
+    import matplotlib
+    from matplotlib import pyplot as plt
+
+    matplotlib.rcParams.update({'font.size': 5})
+    np.random.seed(1236)
+    fixed_rand = np.random.rand(10000, 3)
+    fixed_rand[0, :] = 0
+    rand_cm = matplotlib.colors.ListedColormap(fixed_rand)
+
     el = 2000
     a = np.ones((1, el, el, 3), dtype=np.float32)
 

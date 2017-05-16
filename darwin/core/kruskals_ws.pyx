@@ -12,7 +12,8 @@ from libc.stdlib cimport malloc, free
 import numpy as np
 
 class Watershredder(object):
-    ''' This gnarly class executes the learned Watershed algorithm based on union find datastructure'''
+    ''' This gnarly class executes the learned Watershed algorithm based on union find datastructure. Thanks
+    to Steffen Wolf'''
 
     def __init__(self, image_shape):
         self.image_shape = image_shape
